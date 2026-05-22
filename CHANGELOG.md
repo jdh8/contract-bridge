@@ -27,3 +27,4 @@ Initial release.
   `full_deal`, `fill_deals`. Carved out of `pons::deck`.
 - `serde` feature: `Serialize`/`Deserialize` derives on all public types
   that previously supported them in `dds-bridge` or `pons`.
+- MSRV set to Rust 1.88 (driven by `serde_with` 3.20).
