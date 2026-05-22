@@ -1,0 +1,30 @@
+[package]
+name = "contract-bridge"
+version = "0.1.0"
+authors = ["Chen-Pang He (https://jdh8.org)"]
+edition = "2024"
+rust-version = "1.93"
+description = "Data types and primitives for the game of contract bridge"
+repository = "https://github.com/jdh8/contract-bridge"
+homepage = "https://github.com/jdh8/contract-bridge"
+documentation = "https://docs.rs/contract-bridge"
+readme = "README.md"
+license = "Apache-2.0"
+categories = ["game-development"]
+keywords = ["bridge"]
+
+[features]
+serde = ["dep:serde", "dep:serde_with", "bitflags/serde"]
+rand = ["dep:rand"]
+
+[dependencies]
+bitflags = "2"
+rand = { version = "0.10", optional = true }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_with = { version = "3", default-features = false, features = ["macros"], optional = true }
+thiserror = "2"
+
+[dev-dependencies]
+anyhow = "1"
+proptest = { version = "1", default-features = false, features = ["std"] }
+serde_json = "1"
