@@ -2,10 +2,16 @@
 
 #![cfg(feature = "serde")]
 
+use contract_bridge::auction::{Auction, Call, IllegalCall, RelativeVulnerability};
+use contract_bridge::deck::Deck;
 use contract_bridge::{
     Bid, Card, Contract, FullDeal, Hand, Holding, Level, Penalty, Rank, Seat, SeatFlags, Strain,
     Suit,
 };
+
+const fn bid_call(level: u8, strain: Strain) -> Call {
+    Call::Bid(Bid::new(level, strain))
+}
 
 fn roundtrip<T>(value: &T) -> serde_json::Result<()>
 where
@@ -126,4 +132,74 @@ fn seat_flags_json_roundtrip() -> serde_json::Result<()> {
     roundtrip(&SeatFlags::EW)?;
     roundtrip(&SeatFlags::ALL)?;
     roundtrip(&(SeatFlags::NORTH | SeatFlags::SOUTH))
+}
+
+#[test]
+fn call_json_is_string() -> Result<(), serde_json::Error> {
+    assert_eq!(serde_json::to_string(&Call::Pass)?, "\"P\"");
+    assert_eq!(serde_json::to_string(&Call::Double)?, "\"X\"");
+    assert_eq!(serde_json::to_string(&Call::Redouble)?, "\"XX\"");
+    assert_eq!(
+        serde_json::to_string(&bid_call(3, Strain::Notrump))?,
+        "\"3NT\"",
+    );
+    for call in [
+        Call::Pass,
+        Call::Double,
+        Call::Redouble,
+        bid_call(1, Strain::Spades),
+        bid_call(7, Strain::Clubs),
+    ] {
+        roundtrip(&call)?;
+    }
+    Ok(())
+}
+
+#[test]
+fn auction_json_is_string() -> anyhow::Result<()> {
+    let mut auction = Auction::new();
+    for call in [
+        Call::Pass,
+        bid_call(1, Strain::Spades),
+        bid_call(2, Strain::Hearts),
+        Call::Double,
+        Call::Pass,
+        Call::Pass,
+        Call::Pass,
+    ] {
+        auction.try_push(call)?;
+    }
+    assert_eq!(serde_json::to_string(&auction)?, "\"P 1♠ 2♥ X P P P\"");
+    roundtrip(&auction)?;
+    roundtrip(&Auction::new())?;
+    Ok(())
+}
+
+#[test]
+fn relative_vulnerability_json_roundtrip() -> Result<(), serde_json::Error> {
+    for v in [
+        RelativeVulnerability::NONE,
+        RelativeVulnerability::WE,
+        RelativeVulnerability::THEY,
+        RelativeVulnerability::ALL,
+    ] {
+        roundtrip(&v)?;
+    }
+    Ok(())
+}
+
+#[test]
+fn deck_json_is_string() -> anyhow::Result<()> {
+    roundtrip(&Deck::ALL)?;
+    roundtrip(&Deck::EMPTY)?;
+    let deck: Deck = "AKQJ.T98.765.432".parse()?;
+    assert_eq!(serde_json::to_string(&deck)?, "\"AKQJ.T98.765.432\"");
+    roundtrip(&deck)?;
+    Ok(())
+}
+
+#[test]
+fn illegal_call_roundtrip() -> Result<(), serde_json::Error> {
+    roundtrip(&IllegalCall::AfterFinalPass)?;
+    Ok(())
 }

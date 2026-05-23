@@ -15,6 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Shows how to combine `Builder` with `deck::fill_deals` and rejection
   sampling to generate deals matching partial-knowledge constraints
   (known hands, known cards in a suit, HCP range).
+- Test coverage migrated from `pons`, where the tests only exercised
+  contract-bridge APIs: integration tests for `auction::Auction` (22
+  tests covering bid sequences, declarer resolution, doubles/redoubles,
+  insufficient/inadmissible-double rejection, `try_extend`/`truncate`/
+  `pop`, and `RelativeVulnerability` constants); for `deck::Deck` and
+  the rand-gated `full_deal`/`fill_deals` helpers (21 tests); for the
+  `eval` module (hcp/ltc/zar/BUMRAP/shortness — 7 tests); plus 3 new
+  proptest roundtrips (Call/Auction/Deck `Display`↔`FromStr`) and 5 new
+  serde roundtrips (Call/Auction/RelativeVulnerability/Deck/IllegalCall).
+  Some assertions partially overlap existing tests in
+  `tests/proptest.rs`/`tests/serde.rs` and the in-source unit modules;
+  flagged as candidates for follow-up dedup. Added `approx` and `rand`
+  to dev-dependencies.
 
 ## [0.1.0]
 

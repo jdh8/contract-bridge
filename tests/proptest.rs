@@ -1,10 +1,14 @@
 //! Round-trip property tests for `Display` / `FromStr` on the public types.
 
+use contract_bridge::auction::{Auction, Call, ParseAuctionError, ParseCallError};
+use contract_bridge::deck::Deck;
+use contract_bridge::hand::ParseHandError;
 use contract_bridge::{
     Bid, Builder, Card, Contract, FullDeal, Hand, Holding, Level, PartialDeal, Penalty, Rank, Seat,
     Strain,
 };
 use proptest::prelude::*;
+use proptest::test_runner::TestCaseError;
 
 fn rank() -> impl Strategy<Value = Rank> {
     (2u8..=14).prop_map(Rank::new)
@@ -39,6 +43,32 @@ fn card() -> impl Strategy<Value = Card> {
 
 fn bid() -> impl Strategy<Value = Bid> {
     (level(), strain()).prop_map(|(level, strain)| Bid { level, strain })
+}
+
+fn call() -> impl Strategy<Value = Call> {
+    prop_oneof![
+        3 => bid().prop_map(Call::Bid),
+        3 => Just(Call::Pass),
+        1 => Just(Call::Double),
+        1 => Just(Call::Redouble),
+    ]
+}
+
+fn auction() -> impl Strategy<Value = Auction> {
+    prop::collection::vec(call(), 0..48).prop_map(|calls| {
+        let mut a = Auction::new();
+        for c in calls {
+            if a.has_ended() {
+                break;
+            }
+            let _ = a.try_push(c);
+        }
+        a
+    })
+}
+
+fn deck() -> impl Strategy<Value = Deck> {
+    any::<u64>().prop_map(|bits| Deck::from(Hand::from_bits_truncate(bits)))
 }
 
 fn contract() -> impl Strategy<Value = Contract> {
@@ -167,5 +197,26 @@ proptest! {
     #[test]
     fn subset_roundtrip(d in subset(), s in seat()) {
         prop_assert_eq!(d.display(s).to_string().parse::<PartialDeal>(), Ok(d));
+    }
+
+    #[test]
+    fn call_display_parse_roundtrip(c in call()) {
+        let printed = c.to_string();
+        let parsed: Call = printed.parse().map_err(|e: ParseCallError| TestCaseError::fail(e.to_string()))?;
+        prop_assert_eq!(parsed, c);
+    }
+
+    #[test]
+    fn auction_display_parse_roundtrip(a in auction()) {
+        let printed = a.to_string();
+        let parsed: Auction = printed.parse().map_err(|e: ParseAuctionError| TestCaseError::fail(e.to_string()))?;
+        prop_assert_eq!(parsed, a);
+    }
+
+    #[test]
+    fn deck_display_parse_roundtrip(d in deck()) {
+        let printed = d.to_string();
+        let parsed: Deck = printed.parse().map_err(|e: ParseHandError| TestCaseError::fail(e.to_string()))?;
+        prop_assert_eq!(parsed, d);
     }
 }
