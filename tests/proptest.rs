@@ -1,5 +1,7 @@
 //! Round-trip property tests for `Display` / `FromStr` on the public types.
 
+#![cfg(feature = "rand")]
+
 use contract_bridge::auction::{Auction, Call, ParseAuctionError, ParseCallError};
 use contract_bridge::deck::Deck;
 use contract_bridge::hand::ParseHandError;

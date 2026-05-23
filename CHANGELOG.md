@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `tests/proptest.rs` and `tests/serde.rs` imported `deck::Deck` without a
+  feature guard, so a default-features `cargo test` failed to build with
+  `E0432` once `deck` was gated behind `rand`. Added `#![cfg(feature = "rand")]`
+  to `tests/proptest.rs` and tightened the `tests/serde.rs` guard to
+  `cfg(all(feature = "serde", feature = "rand"))`. The `clippy` and `test`
+  CI steps now run with `--all-features` so the gated tests actually execute.
+
 ### Added
 
 - `generate-deals` example (gated behind the `rand` feature). Migrated

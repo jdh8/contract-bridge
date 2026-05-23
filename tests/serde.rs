@@ -1,6 +1,6 @@
 //! JSON round-trip tests for serde support.
 
-#![cfg(feature = "serde")]
+#![cfg(all(feature = "serde", feature = "rand"))]
 
 use contract_bridge::auction::{Auction, Call, IllegalCall, RelativeVulnerability};
 use contract_bridge::deck::Deck;
