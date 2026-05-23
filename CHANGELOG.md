@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `generate-deals` example (gated behind the `rand` feature). Migrated
   from `pons`, where it no longer needed anything beyond contract-bridge.
+- `generate-constrained-deals` example (gated behind the `rand` feature).
+  Shows how to combine `Builder` with `deck::fill_deals` and rejection
+  sampling to generate deals matching partial-knowledge constraints
+  (known hands, known cards in a suit, HCP range).
 
 ## [0.1.0]
 
