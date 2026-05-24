@@ -18,7 +18,7 @@ use anyhow::Context as _;
 use contract_bridge::deck;
 use contract_bridge::{Builder, FullDeal, Hand, Seat, Suit, eval};
 
-const TARGET: usize = 10;
+const DEFAULT_TARGET: usize = 10;
 const ATTEMPT_CAP: usize = 1_000_000;
 
 fn east_matches(deal: &FullDeal) -> bool {
@@ -35,6 +35,13 @@ fn south_matches(deal: &FullDeal) -> bool {
 }
 
 fn main() -> anyhow::Result<()> {
+    let target = match std::env::args().nth(1) {
+        Some(s) => s.parse::<usize>().with_context(|| {
+            format!("invalid deal count {s:?}; expected a non-negative integer")
+        })?,
+        None => DEFAULT_TARGET,
+    };
+
     let north: Hand = "K92.T4.QJ7.KT975".parse()?;
     let west: Hand = "A73.J72.9864.A43".parse()?;
     let east_known: Hand = ".AK..".parse()?;
@@ -55,13 +62,13 @@ fn main() -> anyhow::Result<()> {
         if east_matches(&deal) && south_matches(&deal) {
             println!("{}", deal.display(Seat::North));
             printed += 1;
-            if printed == TARGET {
+            if printed == target {
                 return Ok(());
             }
         }
         anyhow::ensure!(
             attempt + 1 < ATTEMPT_CAP,
-            "gave up after {ATTEMPT_CAP} attempts; only {printed}/{TARGET} matched"
+            "gave up after {ATTEMPT_CAP} attempts; only {printed}/{target} matched"
         );
     }
     unreachable!("fill_deals is an infinite iterator")
