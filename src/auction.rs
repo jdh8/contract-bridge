@@ -10,7 +10,8 @@
 //! viewed from one partnership's perspective. The four valid combinations are
 //! exposed as the constants [`NONE`](RelativeVulnerability::NONE),
 //! [`WE`](RelativeVulnerability::WE), [`THEY`](RelativeVulnerability::THEY),
-//! and [`ALL`](RelativeVulnerability::ALL).
+//! and [`ALL`](RelativeVulnerability::ALL). [`AbsoluteVulnerability`] is the
+//! perspective-free counterpart, naming the vulnerable side(s) as NS / EW.
 
 use crate::{Bid, Penalty};
 use core::borrow::Borrow;
@@ -120,6 +121,62 @@ impl FromStr for RelativeVulnerability {
             "they" => Ok(Self::THEY),
             "both" | "all" => Ok(Self::ALL),
             _ => Err(ParseRelativeVulnerabilityError),
+        }
+    }
+}
+
+bitflags::bitflags! {
+    /// Vulnerability of the two partnerships, by compass direction
+    ///
+    /// The absolute counterpart of [`RelativeVulnerability`]: it names the
+    /// vulnerable side(s) of a board as North-South / East-West, independent of
+    /// any partnership's perspective. The four valid combinations are exposed
+    /// as the constants [`NONE`](Self::NONE), [`NS`](Self::NS),
+    /// [`EW`](Self::EW), and [`ALL`](Self::ALL).
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    pub struct AbsoluteVulnerability: u8 {
+        /// North-South are vulnerable
+        const NS = 1;
+        /// East-West are vulnerable
+        const EW = 2;
+    }
+}
+
+impl AbsoluteVulnerability {
+    /// No player is vulnerable
+    pub const NONE: Self = Self::empty();
+    /// All players are vulnerable
+    pub const ALL: Self = Self::all();
+}
+
+impl fmt::Display for AbsoluteVulnerability {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Self::NONE => f.write_str("none"),
+            Self::NS => f.write_str("ns"),
+            Self::EW => f.write_str("ew"),
+            Self::ALL => f.write_str("both"),
+            _ => unreachable!("AbsoluteVulnerability has only 4 valid bit combinations"),
+        }
+    }
+}
+
+/// Error returned when parsing an [`AbsoluteVulnerability`] fails
+#[derive(Debug, Error, Clone, Copy, PartialEq, Eq)]
+#[error("Invalid vulnerability: expected one of none, ns, ew, both, all")]
+pub struct ParseAbsoluteVulnerabilityError;
+
+impl FromStr for AbsoluteVulnerability {
+    type Err = ParseAbsoluteVulnerabilityError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "none" => Ok(Self::NONE),
+            "ns" => Ok(Self::NS),
+            "ew" => Ok(Self::EW),
+            "both" | "all" => Ok(Self::ALL),
+            _ => Err(ParseAbsoluteVulnerabilityError),
         }
     }
 }

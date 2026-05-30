@@ -77,6 +77,62 @@ fn relative_vulnerability_parses_case_insensitive_and_aliases()
 }
 
 #[test]
+fn absolute_vulnerability_contains() {
+    assert!(AbsoluteVulnerability::ALL.contains(AbsoluteVulnerability::NS));
+    assert!(AbsoluteVulnerability::ALL.contains(AbsoluteVulnerability::EW));
+    assert!(AbsoluteVulnerability::NS.contains(AbsoluteVulnerability::NS));
+    assert!(!AbsoluteVulnerability::NS.contains(AbsoluteVulnerability::EW));
+    assert!(!AbsoluteVulnerability::NONE.contains(AbsoluteVulnerability::NS));
+}
+
+#[test]
+fn absolute_vulnerability_roundtrip() -> Result<(), ParseAbsoluteVulnerabilityError> {
+    for v in [
+        AbsoluteVulnerability::NONE,
+        AbsoluteVulnerability::NS,
+        AbsoluteVulnerability::EW,
+        AbsoluteVulnerability::ALL,
+    ] {
+        assert_eq!(v.to_string().parse::<AbsoluteVulnerability>()?, v);
+    }
+    Ok(())
+}
+
+#[test]
+fn absolute_vulnerability_parses_case_insensitive_and_aliases()
+-> Result<(), ParseAbsoluteVulnerabilityError> {
+    assert_eq!(
+        "NONE".parse::<AbsoluteVulnerability>()?,
+        AbsoluteVulnerability::NONE,
+    );
+    assert_eq!(
+        "Ns".parse::<AbsoluteVulnerability>()?,
+        AbsoluteVulnerability::NS
+    );
+    assert_eq!(
+        "all".parse::<AbsoluteVulnerability>()?,
+        AbsoluteVulnerability::ALL,
+    );
+    assert!("we".parse::<AbsoluteVulnerability>().is_err());
+    Ok(())
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn absolute_vulnerability_serde_roundtrip() -> serde_json::Result<()> {
+    for v in [
+        AbsoluteVulnerability::NONE,
+        AbsoluteVulnerability::NS,
+        AbsoluteVulnerability::EW,
+        AbsoluteVulnerability::ALL,
+    ] {
+        let json = serde_json::to_string(&v)?;
+        assert_eq!(serde_json::from_str::<AbsoluteVulnerability>(&json)?, v);
+    }
+    Ok(())
+}
+
+#[test]
 fn auction_roundtrip() -> anyhow::Result<()> {
     let mut auction = Auction::new();
     for call in [

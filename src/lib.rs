@@ -11,6 +11,7 @@ pub mod seat;
 #[cfg(feature = "rand")]
 pub mod deck;
 
+pub use auction::AbsoluteVulnerability;
 pub use contract::{Bid, Contract, Level, Penalty};
 pub use deal::{Builder, FullDeal, PartialDeal};
 pub use hand::{Card, Hand, Holding, Rank};
